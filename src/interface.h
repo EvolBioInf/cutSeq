@@ -8,14 +8,15 @@
 #ifndef INTERFACE
 #define INTERFACE
 
-#define DEFAULT_I 1
-
 /* define argument container */
 typedef struct args{
   char    h; /* help message?         */
   char    v; /* version message?      */
   char  err; /* error                 */
-  int     i; /* iterations            */
+  int     l; /* line length           */
+  char   *r; /* regions               */
+  char   *f; /* file with regions     */
+  char    s; /* spliced?              */
   char **fi; /* input files           */
   int    nf; /* number of input files */
 } Args;

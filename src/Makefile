@@ -5,7 +5,7 @@ CFLAGS         = -DVERSION=\"$(VERSION)\" -DDATE=\"$(DATE)\" -O3 -Wall -Wshadow 
 
 SRCFILES  = cutSeq.c interface.c
 OBJFILES  = cutSeq.o interface.o
-LIBS      = -lcommon -lm
+LIBS      = -lcommon -lm -lbsd
 EXECFILE  = cutSeq
 
 .PHONY : all
@@ -14,7 +14,10 @@ $(EXECFILE) : $(OBJFILES)
 	$(CC) $(CFLAGS) -o $(EXECFILE) $(OBJFILES) $(LIBS)
 interface.o: interface.h
 
+cutSeq.c: cutSeq.org
+	bash ../scripts/org2nw cutSeq.org | notangle -RcutSeq.c > cutSeq.c
+
 clean:
-	rm -f *.o *~
+	rm -f *.o *~ cutSeq.c
 test:
 	bash ../scripts/cutSeq.sh 

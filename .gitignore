@@ -5,6 +5,8 @@ doc/*.aux
 doc/*.dvi
 doc/*.log
 doc/*.pdf
+doc/text.tex
 doc/date.tex
 doc/version.tex
 src/cutSeq
+src/cutSeq.c
