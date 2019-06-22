@@ -280,6 +280,7 @@ Intervals are created, which is declared
       } else {
 	// <<Print separate fragments>>
       }
+      freeSeq(seq);
     }
   }
 #+end_src
