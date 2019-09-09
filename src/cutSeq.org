@@ -1,42 +1,44 @@
 #+begin_src latex
-    \section{Introduction}
-    Molecular sequence data, especially DNA sequence data, are among the
-    longest texts we have. A single \textit{Escherichia coli} genome with
-    its 4.4--5.6 million nucleotides occupies more space than the King
-    James Bible with its 4.1 characters. Yet, like the bible, where the
-    focus is often on a few verses, sequences are often cut up into bits
-    of interest. The purpose of \texttt{cutSeq} is to do that. It takes as
-    input one or more sequences in FASTA format and outputs one or more
-    regions from each of them. The regions can either be entered on the
-    command line or supplied in a file. On the command line, regions to be
-    cut are denoted
-    \[
-    \texttt{-r s1-e1,s2-e2}
-    \]
-    that is, pairs of start and end positions are separated by commas,
-    while the start and end positions are separated by hyphens.
+  \section{Introduction}
+  Molecular sequence data, especially DNA sequence data, are among the
+  longest texts we have. A single \textit{Escherichia coli} genome with
+  its 4.4--5.6 million nucleotides occupies more space than the King
+  James Bible with its 4.1 characters. Yet, like the bible, where the
+  focus is often on a few verses, sequences are often cut up into bits
+  of interest. The purpose of \texttt{cutSeq} is to do that. It takes as
+  input one or more sequences in FASTA format and outputs one or more
+  regions from each of them. The regions can either be entered on the
+  command line or supplied in a file. On the command line, regions to be
+  cut are denoted
+  \[
+  \texttt{-r s1-e1,s2-e2}
+  \]
+  that is, pairs of start and end positions are separated by commas,
+  while the start and end positions are separated by hyphens.
 
-    Start positions go from 1 to the length of the sequence, and
-    intervals are denoted including the end position. For example, if
-    $S=\texttt{CATCTTTTGT}$, then the interval $(3,5)$ is
-    $S[3..5]=\texttt{TCT}$.
+  Start positions go from 1 to the length of the sequence, and
+  intervals are denoted including the end position. For example, if
+  $S=\texttt{CATCTTTTGT}$, then the interval $(3,5)$ is
+  $S[3..5]=\texttt{TCT}$.
 
-    If the intervals are supplied in a file, it consists of pairs of
-    start and end positions separated by a blank, one pair per line:
-    \begin{center}
-    \texttt{s1 e2}\\
-    \texttt{s2 e2}
-    \end{center}
-    By default, \texttt{cutSeq} prints each region individually. However,
-    it can also concatenate the regions thus imitating the splicing of
-    pre-mRNA to mRNA.
+  If the intervals are supplied in a file, it consists of pairs of
+  start and end positions separated by a blank, one pair per line:
+  \begin{center}
+  \texttt{s1 e2}\\
+  \texttt{s2 e2}
+  \end{center}
+  By default, \texttt{cutSeq} prints each region individually. However,
+  it can also concatenate the regions thus imitating the splicing of
+  pre-mRNA to mRNA.
 
-    \section{Implementation}
-    The program is based on data structures for representing intervals and
-    sequences. These data structures are handled by functions, which need
-    to be declared. Data structures, functions, and their declarations are
-    bookended by a section for including header files at the top and the
-    \texttt{main} function at the end.
+  \section{Implementation}
+  \texttt{CutSeq} is based on data structures for representing sequences
+  and intervals. Sequences are covered in the \texttt{seq}
+  library\footnote{\texttt{github.com/evolbioinf/seq}}, while intervals still
+  need to be declared. They are handled by functions, which also need to
+  be declared. Data structures, functions, and their declarations are
+  bookended by a section for including header files at the top and the
+  \texttt{main} function at the end.
 #+end_src
 #+begin_src C <<cutSeq.c>>=
   // <<Include headers>>
@@ -46,16 +48,15 @@
   // <<Main function>>
 #+end_src
 #+begin_src latex
-  Everything is based on the data structures for intervals and
-  sequences, so they are implemented first, together with functions for
-  handling them.
+  The data structures for intervals are implemented first, together with
+  functions for handling them.
   \subsection{Intervals}
   An interval consists of a start position and an end position.
 #+end_src
 #+begin_src C <<Data structures>>=
   typedef struct interval {
-    int start;
-    int end;
+    long start;
+    long end;
   } Interval;
 #+end_src
 #+begin_src latex
@@ -71,15 +72,15 @@
 Intervals are created, which is declared
 #+end_src
 #+begin_src C <<Function declarations>>=
-  Interval *newInterval(int s, int e);
+  Interval *newInterval(long s, long e);
 #+end_src
 #+begin_src latex
-  and implemented.
+  and implemented ensuring that the start position is at least 1.
 #+end_src
 #+begin_src C <<Function definitions>>=
-  Interval *newInterval(int s, int e) {
+  Interval *newInterval(long s, long e) {
     Interval *i = (Interval *)emalloc(sizeof(Interval));
-    i->start = s;
+    i->start = s > 0 ? s : 1;
     i->end = e;
     return i;
   }
@@ -143,15 +144,12 @@ Intervals are created, which is declared
   }
 #+end_src
 #+begin_src latex
-  These are all the stock interval functions required. Sequences, once
-  defined, also rely on functions for construction, destruction, and
-  addition.
+  These are all the stock interval functions required.
 #+end_src
 #+begin_src latex
   \subsection{Main function}
-  The \texttt{main} function directs the rest of the program. It
-  communicates with the user, reads the intervals to be cut out, and
-  deals with the input files.
+  The \texttt{main} function communicates with the user, reads the
+  intervals to be cut out, and deals with the input files.
 #+end_src
 #+begin_src C <<Main function>>=
   int main(int argc, char **argv) {
@@ -164,10 +162,9 @@ Intervals are created, which is declared
 #+end_src
 #+begin_src latex
   When communicating with the user, the program name is first set, in
-  case it needs to be retrieved later on. Then the list of arguments is
-  obtained and the arguments are checked to see whether the user
-  requested program information or help. There might even be an error in
-  the input.
+  case it needs to be retrieved by an error message later on. Then the
+  list of arguments is obtained and queried for information or help
+  requests. There might also have been an error in the input.
 #+end_src
 #+begin_src C <<Communicate with the user>>=
   setprogname(argv[0]);
@@ -210,13 +207,13 @@ Intervals are created, which is declared
   while ((token = strsep(&(args->r), ",")) != NULL) {
     char *s = strsep(&token, "-");
     char *e = strsep(&token, "-");
-    Interval *i = newInterval(atoi(s), atoi(e));
+    Interval *i = newInterval((long)atof(s), (long)atof(e));
     intervalArrAdd(ia, i);
   }
 #+end_src
 #+begin_src latex
   The function \texttt{strsep} is declared in \texttt{string.h},
-  \texttt{atoi} in \texttt{stdlib.h}.
+  \texttt{atol} in \texttt{stdlib.h}.
 #+end_src
 #+begin_src C <<Include headers>>=
   #include <string.h>
@@ -227,9 +224,9 @@ Intervals are created, which is declared
 #+end_src
 #+begin_src C <<Read intervals from file>>=
   fp = efopen(args->f, "r");
-  int s, e;
-  while (fscanf(fp, "%d %d\n", &s, &e) != EOF) {
-    Interval *i = newInterval(s, e);
+  float s, e;
+  while (fscanf(fp, "%g %g\n", &s, &e) != EOF) {
+    Interval *i = newInterval((long)s, (long)e);
     intervalArrAdd(ia, i);
   }
   fclose(fp);
@@ -243,9 +240,8 @@ Intervals are created, which is declared
   #include <stdio.h>
 #+end_src
 #+begin_src latex
-  Conventional UNIX programs iterate across all input files, and read
-  from the standard input stream if there are no input
-  files; so does \texttt{cutSeq}.
+  Like most UNIX programs, \texttt{cutSeq} iterates across input files
+  or reads from the standard input stream.
 #+end_src
 #+begin_src C <<Deal with input files>>=
   for (int i = 0; i < args->nf; i++) {
@@ -265,7 +261,7 @@ Intervals are created, which is declared
   void scanFile(FILE *fp, IntervalArr *ia, Args *args);
 #+end_src
 #+begin_src latex
-  and implemented such that for each sequence read the fragments are
+  and implemented such that for each sequence read, the fragments are
   either printed spliced together or as separate fragments. If only a
   single fragment is extracted, splicing makes no sense and the
   \emph{separate} mode of printing is used regardless of whether or not
@@ -285,20 +281,24 @@ Intervals are created, which is declared
   }
 #+end_src
 #+begin_src latex
-  The \texttt{Seq} data structure for handling sequences is declared in \texttt{seq.h}.
+  The \texttt{Seq} data structure for sequences is declared in
+  \texttt{seq.h}.
 #+end_src
 #+begin_src C <<Include headers>>=
   #include "seq.h"
 #+end_src
 #+begin_src latex
   Each fragment is printed as a header plus its interval, followed by
-  the sequence data.
+  the actual sequence. It is important to ensure here that the interval
+  submitted for printing does not extend beyond the sequence string.
 #+end_src
 #+begin_src C <<Print separate fragments>>=
   for (int i = 0; i < ia->n; i++) {
-    int s = ia->arr[i]->start;
-    int e = ia->arr[i]->end;
-    printf(">%s %d..%d\n", seq->name, s, e);
+    long s = ia->arr[i]->start;
+    long e = ia->arr[i]->end;
+    long l = seq->l;
+    e = e <= l ? e : l;
+    printf(">%s %ld..%ld\n", seq->name, s, e);
     printStr(seq->data + s - 1, e - s + 1, args->l);
   }
 #+end_src
@@ -308,14 +308,14 @@ Intervals are created, which is declared
   length \texttt{l}. The function is declared
 #+end_src
 #+begin_src C <<Function declarations>>=
-  void printStr(char *s, int n, int l);
+  void printStr(char *s, long n, int l);
 #+end_src
 #+begin_src latex
   and implemented.
 #+end_src
 #+begin_src C <<Function definitions>>=
-  void printStr(char *s, int n, int l) {
-    for (int i = 0; i < n; i++) {
+  void printStr(char *s, long n, int l) {
+    for (long i = 0; i < n; i++) {
       printf("%c", s[i]);
       if ((i + 1) % l == 0)
 	printf("\n");
@@ -327,33 +327,36 @@ Intervals are created, which is declared
 #+begin_src latex
   When printing, say, two spliced fragments, the header has the
   structure
-  \[
-  >\mbox{name} \mbox{join}(s_1..e_1,s_2..e_2)
-  \]
-  Followed by the spliced sequence string. So there are three steps,
+  \begin{center}
+  \texttt{>name join(s\_1..e\_1,s\_2..e\_2)}
+  \end{center}
+  Followed by the spliced sequence string. So there are three steps:
   printing the header, constructing the spliced sequence string, and
   printing the sequence string. The last step is already available in
   the function \texttt{printStr} just implemented.
 #+end_src
 #+begin_src C <<Print spliced fragments>>=
   char *splicedSeq;
-  int n;
+  long n;
   //<<Print spliced header>>
   //<<Construct spliced sequence>>
   printStr(splicedSeq, n, args->l);
 #+end_src
 #+begin_src latex
-  The header of a spliced sequence is printed by looping across the
-  intervals involved.
+  The header of a spliced sequence is printed by looping across its
+  intervals.
 #+end_src
 #+begin_src C <<Print spliced header>>=
-  int s = ia->arr[0]->start;
-  int e = ia->arr[0]->end;
-  printf(">%s join(%d..%d", seq->name, s, e);
+  long s = ia->arr[0]->start;
+  long e = ia->arr[0]->end;
+  long  l = seq->l;
+  e = e <= l ? e : l;
+  printf(">%s join(%ld..%ld", seq->name, s, e);
   for (int i = 1; i < ia->n; i++) {
     s = ia->arr[i]->start;
     e = ia->arr[i]->end;
-    printf(",%d..%d", s, e);
+    e = e <= l ? e : l;
+    printf(",%ld..%ld", s, e);
   }
   printf(")\n");
 #+end_src
@@ -363,15 +366,19 @@ Intervals are created, which is declared
   are then copied.
 #+end_src
 #+begin_src C <<Construct spliced sequence>>=
-  n = 0;
-  for (int i = 0; i < ia->n; i++)
-    n += ia->arr[i]->end - ia->arr[i]->start + 1;
-  splicedSeq = emalloc(n);
-  n = 0;
-  for (int i = 0; i < ia->n; i++) {
-    s = ia->arr[i]->start - 1;
-    e = ia->arr[i]->end - 1;
-    for (int j = s; j <= e; j++)
-      splicedSeq[n++] = seq->data[j];
-  }
+    n = 0;
+    for (int i = 0; i < ia->n; i++)
+      n += ia->arr[i]->end - ia->arr[i]->start + 1;
+    splicedSeq = emalloc(n);
+    n = 0;
+    for (int i = 0; i < ia->n; i++) {
+      s = ia->arr[i]->start - 1;
+      e = ia->arr[i]->end;
+      e = e <= l ? e : l;
+      for (long j = s; j < e; j++)
+	splicedSeq[n++] = seq->data[j];
+    }
+#+end_src
+#+begin_src latex
+  This closes the implementation of \texttt{cutSeq}.
 #+end_src

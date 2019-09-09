@@ -8,6 +8,16 @@ else
     echo ${DIFF}
 fi
 
+./cutSeq -r 1-1e+9  ../data/test.fasta > tmp.out
+DIFF=$(diff tmp.out ../data/cutSeq1b.out)
+if [ "$DIFF" == "" ] 
+then
+    printf "Test(cutSeq -r 1-1e+9)\t\t\tpass\n"
+else
+    printf "Test(cutSeq -r 1-1e+9)\t\t\tfail\n"
+    echo ${DIFF}
+fi
+
 ./cutSeq -r 1-100 -l 50  ../data/test.fasta > tmp.out
 DIFF=$(diff tmp.out ../data/cutSeq2.out)
 if [ "$DIFF" == "" ] 
@@ -35,6 +45,16 @@ then
     printf "Test(cutSeq -r 500-600,700-1000 -s)\tpass\n"
 else
     printf "Test(cutSeq -r 500-600,700-1000 -s)\tfail\n"
+    echo ${DIFF}
+fi
+
+./cutSeq -r 500-600,700-1001 -s  ../data/test.fasta > tmp.out
+DIFF=$(diff tmp.out ../data/cutSeq4.out)
+if [ "$DIFF" == "" ] 
+then
+    printf "Test(cutSeq -r 500-600,700-1001 -s)\tpass\n"
+else
+    printf "Test(cutSeq -r 500-600,700-1001 -s)\tfail\n"
     echo ${DIFF}
 fi
 

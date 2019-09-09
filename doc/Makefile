@@ -12,6 +12,6 @@ all: $(NAME).tex text.tex header.tex
 	latex $(NAME)
 	dvipdf $(NAME)
 text.tex: ../src/$(NAME).org
-	bash ../scripts/org2nw ../src/$(NAME).org | noweave -n -index -autodefs c > text.tex
+	bash ../scripts/org2nw ../src/$(NAME).org | noweave -n > text.tex
 clean:
 	rm -f text.tex $(NAME).pdf
