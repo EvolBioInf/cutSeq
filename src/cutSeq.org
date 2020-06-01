@@ -122,7 +122,9 @@ Intervals are created, which is declared
 #+end_src
 #+begin_src C <<Function definitions>>=
   void intervalArrAdd(IntervalArr *ia, Interval *i) {
-    ia->arr = (Interval **)erealloc(ia->arr, sizeof(Interval *));
+    ia->arr = (Interval **)erealloc(ia->arr,
+				    (ia->n + 1) *
+				    sizeof(Interval *));
     ia->arr[ia->n++] = i;
   }
 #+end_src
@@ -136,10 +138,11 @@ Intervals are created, which is declared
 #+begin_src latex
   and implemented.
 #+end_src
-#+begin_src C <<Function definition>>=
-  void freeIntervalArr(IntervallArr *ia) {
-    for (int i = 0; i < = ia->n; i++)
+#+begin_src C <<Function definitions>>=
+  void freeIntervalArr(IntervalArr *ia) {
+    for (int i = 0; i < ia->n; i++)
       free(ia->arr[i]);
+    free(ia->arr);
     free(ia);
   }
 #+end_src
@@ -149,7 +152,8 @@ Intervals are created, which is declared
 #+begin_src latex
   \subsection{Main function}
   The \texttt{main} function communicates with the user, reads the
-  intervals to be cut out, and deals with the input files.
+  intervals to be cut out, and deals with the input files. At the end,
+  any remaining memory is freed.
 #+end_src
 #+begin_src C <<Main function>>=
   int main(int argc, char **argv) {
@@ -157,6 +161,7 @@ Intervals are created, which is declared
     // <<Communicate with the user>>
     // <<Get intervals>>
     // <<Deal with input files>>
+    // <<Free memory>>
     return 0;
   }
 #+end_src
@@ -182,6 +187,12 @@ Intervals are created, which is declared
 #+begin_src C <<Include headers>>=
   #include <bsd/stdlib.h>
   #include "interface.h"
+#+end_src
+#+begin_src latex
+  The \texttt{args} object is freed at the end.
+#+end_src
+#+begin_src C <<Free memory>>=
+  freeArgs(args);
 #+end_src
 #+begin_src latex
   The intervals supplied by the user are delivered either on the command
@@ -238,6 +249,12 @@ Intervals are created, which is declared
 #+end_src
 #+begin_src C <<Include headers>>=
   #include <stdio.h>
+#+end_src
+#+begin_src latex
+  The interval array is freed at the end.
+#+end_src
+#+begin_src C <<Free memory>>=
+  freeIntervalArr(ia);
 #+end_src
 #+begin_src latex
   Like most UNIX programs, \texttt{cutSeq} iterates across input files
